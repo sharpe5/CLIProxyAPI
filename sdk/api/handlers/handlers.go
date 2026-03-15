@@ -791,6 +791,17 @@ func (h *BaseAPIHandler) getRequestDetails(modelName string) (providers []string
 	parsed := thinking.ParseSuffix(resolvedModelName)
 	baseModel := strings.TrimSpace(parsed.ModelName)
 
+	// Strip provider prefix (e.g., "anthropic/claude-opus-4-6" → "claude-opus-4-6")
+	if idx := strings.Index(baseModel, "/"); idx != -1 {
+		baseModel = baseModel[idx+1:]
+		// Rebuild resolvedModelName with stripped base and any thinking suffix
+		if parsed.HasSuffix {
+			resolvedModelName = fmt.Sprintf("%s(%s)", baseModel, parsed.RawSuffix)
+		} else {
+			resolvedModelName = baseModel
+		}
+	}
+
 	providers = util.GetProviderName(baseModel)
 	// Fallback: if baseModel has no provider but differs from resolvedModelName,
 	// try using the full model name. This handles edge cases where custom models
